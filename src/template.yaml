@@ -1,8 +1,8 @@
 ---
 category: post | til | misc
-year: 2022
-slug: 12/28/title-in-ascii
+slug: title-in-ascii
 thumbnail: ./thumbnail.png
+thumbnailAlt: 섬네일 대체 텍스트
 title: 제목
 subtitle: 부제목
 description: >
@@ -10,42 +10,41 @@ description: >
 date: 2022-12-28T00+09
 revisions:
   - date: 2022-12-29T08+09
-    message: 수정 사유
+    message: 1차 수정 사유
   - date: 2022-12-30T16+09
-    message: 수정 사유
+    message: 2차 수정 사유
   - date: 2022-12-31T23+09
-    message: 수정 사유
+    message: 3차 수정 사유
 keywords:
   main: [메인 키워드 목록]
   sub: [서브 키워드 목록]
   misc: [기타 키워드 목록]
+noindex: false
 ---
 caution: |
   - 본문의 문단 제목은 2단계(`##`)부터 시작합니다.
     1단계 제목은 게시글 제목에만 사용됩니다.
 
   - 파일
-    - 게시글은 `src/{category}/{year}/{mm}-{dd}-{slug[6:]}/index.mdx`로
-      저장합니다.
-    - 이미지(jpg, png, svg), 루프 클립(mp4), 일회성 컴포넌트 등의 첨부
-      자원은 `src/{category}/{year}/{mm}-{dd}-{slug[6:]}/` 디렉터리에
-      저장하여 불러옵니다.
+    - 게시글은 `src/{category}/{YYYY}/{MM}-{DD}-{slug}/index.mdx`로 저장합니다.
+      - 게시글의 작성, 수정 날짜 표시가 해당 게시글의 변경 이력으로 연결됩니다.
+    - 이미지(jpg, png, svg), 루프 클립(mp4), 일회성 컴포넌트 등의 첨부 자원은
+      `src/{category}/{YYYY}/{MM}-{DD}-{slug}/`에 저장하여 불러옵니다.
     - 공통 컴포넌트, 재사용 가능성이 있는 컴포넌트는 `src/components/`
       디렉터리에 저장하여 불러옵니다.
 
   - Frontmatter
-    - category, year, slug 필드는 URL에 사용되므로 신중히 결정해야 하며,
-      한번 배포한 이후에는 어떤 이유로도 변경해서는 안 됩니다.
-    - 섬네일(thumbnail) 파일의 이름은 `thumbnail.*` 형태가 되도록
-      작성하며, 크기가 1200x630이고 정중앙 600x600 영역에 주요 콘텐츠가
-      있는 png 또는 jpg 이미지여야 합니다.
-    - 제목(title), 부제목(subtitle)을 합친 길이가 너무 길어지지
-      않도록 합니다.
+    - date 필드의 연월일과 category, slug 필드는 URL에 사용되므로 신중히
+      결정해야 하며, 한번 배포한 이후에는 어떤 이유로도 변경해서는 안 됩니다.
+    - 섬네일(thumbnail) 파일
+      - 이름: `thumbnail.jpg|png`
+      - 크기: 1200x630
+      - 정중앙 600x600 영역에 주요 콘텐츠가 있어야 합니다.
+    - 제목(title), 부제목(subtitle)을 합친 길이가 너무 길어지지 않도록 합니다.
     - 설명/요약 문구(description)는 공백 포함 80자 이내로 작성합니다.
-    - 작성일(date), 수정일(revisions[i].date)은
-      `{YYYY}-{MM}-{DD}T{HH}+09` 형태로, 연월일, 시까지 작성합니다.
-    - 수정일 작성 시 반드시 수정 사유(revisions[i].message)를 작성해야
-      합니다.
+    - 작성일(date), 수정일(revisions[i].date)은 `{YYYY}-{MM}-{DD}T{HH}+09`
+      형태로, 연월일, 시까지 작성합니다.
+    - 수정일 작성 시 반드시 수정 사유(revisions[i].message)를 작성해야 합니다.
     - 키워드(keywords)는 연관도, 중요도에 따라 3단계로 작성합니다.
       - 1단계 main: 주제를 다루는 메인 키워드
       - 2단계 sub: 주제는 아니지만 관련 있는 서브 키워드
