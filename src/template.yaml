@@ -4,9 +4,7 @@ slug: title-in-ascii
 thumbnail: ./thumbnail.png
 thumbnailAlt: 섬네일 대체 텍스트
 title: 제목
-subtitle: 부제목
-description: >
-  설명/요약 문구(80자 이내)
+description: 설명/요약 문구(80자 이내)
 date: 2022-12-28T00+09
 revisions:
   - date: 2022-12-29T08+09
@@ -30,6 +28,9 @@ caution: |
       - 게시글의 작성, 수정 날짜 표시가 해당 게시글의 변경 이력으로 연결됩니다.
     - 이미지(jpg, png, svg), 루프 클립(mp4), 일회성 컴포넌트 등의 첨부 자원은
       `src/{category}/{YYYY}/{MM}-{DD}-{slug}/`에 저장하여 불러옵니다.
+      - svg 파일은 아래처럼 `svgo`로, `--pretty --indent 0 --final-newline`
+        옵션을 주어서 크기를 줄여 저장합니다.
+        svgo --pretty --indent 0 --final-newline -f . -o ./svgo
     - 공통 컴포넌트, 재사용 가능성이 있는 컴포넌트는 `src/components/`
       디렉터리에 저장하여 불러옵니다.
 
@@ -40,7 +41,7 @@ caution: |
       - 이름: `thumbnail.jpg|png`
       - 크기: 1200x630
       - 정중앙 600x600 영역에 주요 콘텐츠가 있어야 합니다.
-    - 제목(title), 부제목(subtitle)을 합친 길이가 너무 길어지지 않도록 합니다.
+    - 제목(title) 길이가 너무 길어지지 않도록 합니다.
     - 설명/요약 문구(description)는 공백 포함 80자 이내로 작성합니다.
     - 작성일(date), 수정일(revisions[i].date)은 `{YYYY}-{MM}-{DD}T{HH}+09`
       형태로, 연월일, 시까지 작성합니다.
