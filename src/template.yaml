@@ -1,5 +1,5 @@
 ---
-category: post | til | misc
+category: post | diary
 slug: title-in-ascii
 thumbnail: ./thumbnail.png
 thumbnailAlt: 섬네일 대체 텍스트
@@ -21,22 +21,22 @@ noindex: false
 ---
 caution: |
   - 본문의 문단 제목은 2단계(`##`)부터 시작합니다.
-    1단계 제목은 게시글 제목에만 사용됩니다.
+    1단계 제목은 게시글 페이지 렌더 시 게시글 제목에 사용됩니다.
 
   - 파일
-    - 게시글은 `src/{category}/{YYYY}/{MM}-{DD}-{slug}/index.mdx`로 저장합니다.
+    - 게시글은 `src/post/{YYYY}/{MM}-{DD}-{slug}/index.md`로 저장합니다.
       - 게시글의 작성, 수정 날짜 표시가 해당 게시글의 변경 이력으로 연결됩니다.
-    - 이미지(jpg, png, svg), 루프 클립(mp4), 일회성 컴포넌트 등의 첨부 자원은
-      `src/{category}/{YYYY}/{MM}-{DD}-{slug}/`에 저장하여 불러옵니다.
+    - 이미지(jpg, png, svg), 루프 클립(mp4) 등의 첨부 자원은
+      `src/post/{YYYY}/{MM}-{DD}-{slug}/`에 저장하여 불러옵니다.
       - svg 파일은 아래처럼 `svgo`로, `--pretty --indent 0 --final-newline`
-        옵션을 주어서 크기를 줄여 저장합니다.
+        옵션을 주어서 저장합니다.
         svgo --pretty --indent 0 --final-newline -f . -o ./svgo
-    - 공통 컴포넌트, 재사용 가능성이 있는 컴포넌트는 `src/components/`
-      디렉터리에 저장하여 불러옵니다.
+      - 기존 게시글의 첨부 자원을 참조해야 하는 경우,
+        해당 파일을 복제하거나 이동하지 말고 원래 위치를 상대 경로로 참조합니다.
 
   - Frontmatter
-    - date 필드의 연월일과 category, slug 필드는 URL에 사용되므로 신중히
-      결정해야 하며, 한번 배포한 이후에는 어떤 이유로도 변경해서는 안 됩니다.
+    - date 필드의 연월일과 slug 필드는 URL에 사용되므로 신중히 결정해야 하며,
+      한번 배포한 이후에는 어떤 이유로도 변경해서는 안 됩니다.
     - 섬네일(thumbnail) 파일
       - 이름: `thumbnail.jpg|png`
       - 크기: 1200x630
