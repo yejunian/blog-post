@@ -1,0 +1,269 @@
+---
+category: post
+slug: javascript-asi
+thumbnail: ./thumbnail.png
+thumbnailAlt: 단어 카드에 세미콜론 문자와 이름, 유니코드 코드포인트 ‘U+003B’, 예문으로 제공된 ‘return 0;’이 표시되어 있다.
+title: JavaScript 세미콜론 자동 삽입 (ASI)
+description: 꼭 써야 할까? 안 써도 될까?
+date: 2024-06-14T04+09
+revisions: []
+keywords:
+  main: [JavaScript]
+  sub: []
+  misc: []
+noindex: false
+---
+
+JavaScript는 스펙에 명시된 규칙에 따라서 세미콜론을 자동으로 채워 준다. JavaScript 코드에서 구문을 마치는 세미콜론을 없애더라도 대부분 의도대로 작동한다. 가끔 의도대로 작동하지 않는 상황도 있다. 어떤 기준으로 세미콜론을 추가하는지 공부한다고 ECMAScript 스펙과 MDN 문서를 읽으면서 정리했는데, 문서 내용을 거의 가져와서 짜깁기가 되어 버렸다.
+
+## Automatic Semicolon Insertion
+
+ECMAScript 스펙에서는 자동 세미콜론 삽입을 다음과 같이 소개한다.[^tc39-asi]
+
+> Most ECMAScript statements and declarations must be terminated with a semicolon. Such semicolons may always appear explicitly in the source text. For convenience, however, such semicolons may be omitted from the source text in certain situations. These situations are described by saying that semicolons are automatically inserted into the source code token stream in those situations.
+
+대부분의 ECMAScript 구문과 선언은 세미콜론으로 끝나야 한다. 이러한 세미콜론은 항상 소스 텍스트에 명시적으로 나타나야 한다. 그러나 편의를 위해 특정 상황에서 세미콜론이 생략될 수 있다. 그 상황에서는 세미콜론이 자동으로 삽입된다는 말이다.
+
+MDN의 JavaScript 레퍼런스 중 Lexical grammer 문서에서도 자동 세미콜론 삽입을 소개한다.[^mdn-asi]
+
+> However, to make the language more approachable and convenient, JavaScript is able to automatically insert semicolons when consuming the token stream, so that some invalid token sequences can be "fixed" to valid syntax. This step happens after the program text has been parsed to tokens according to the lexical grammar.
+
+JavaScript는 코드를 읽어들일 때 일부 유효하지 않은 부분을 유효한 문법으로 고치도록 세미콜론을 자동으로 넣을 수 있다. 이 과정은 코드가 토큰으로 변환된 뒤 일어난다.
+
+두 문서를 읽다 보면 공통적으로 ‘토큰’이라는 용어가 나온다. 여기서 말하는 토큰은 식별자, 연산자 등, 소스 코드의 의미 있는 작은 조각이다. 영문 위키피디아는 (어휘적) 토큰을 ‘할당되어서 식별된 의미를 갖는 문자열’이라고 정의한다.[^wikipedia-en-token]
+
+---
+
+## ASI 기본 규칙 3가지
+
+ECMAScript 스펙에 따르면, 소스 코드가 왼쪽에서 오른쪽으로 파싱될 때, 아래 3가지 규칙에 따라서 세미콜론이 자동으로 삽입된다.[^tc39-asi]
+
+### 1. 허용되지 않는 토큰 발견
+
+<mark>문법에 따라 허용되지 않는 ‘문제의 토큰’</mark>이 다음 중 하나에 해당한다면 ‘문제의 토큰’ 앞에 세미콜론을 삽입한다.
+
+1. ‘문제의 토큰’이 직전 토큰과 <mark>줄 바꿈</mark> 하나 이상으로 구분되었다. 줄 바꿈 문자를 포함하는 블록 주석 또한 줄 바꿈으로 인정한다
+2. ‘문제의 토큰’이 `}`이다.
+3. 직전 토큰이 `)`이고 삽입하는 세미콜론이 `do...while` 문을 끝내는 세미콜론으로 파싱된다.
+
+```javascript
+// 1-1. let 선언이 끝나지 않았는데 줄 바꿈과 if를 만났다.
+// 1-2. 구문이 (세미콜론으로) 끝나지 않았는데 }를 만났다.
+
+let value = getCount() // (1-1)
+
+if (value <= 0) {
+  value = 0 // (1-2)
+}
+```
+
+```javascript
+// 1-3. (i < 100)과 alert 사이에 삽입하는 세미콜론이
+//      do...while 문을 끝낸다.
+
+let i = 0;
+
+do {
+  i += 1;
+} while (i < 100)alert(i);
+              // ^ (1-3)
+```
+
+#### 주의: for 문 상단부
+
+`for` 문 상단부<small>(예: `for (let i = 0; i < 5; i += 1)`)</small>에서 초깃값-조건-변화를 구분하는 세미콜론은 빠뜨려도 자동으로 채워 주지 않는다. 그건 구문의 끝을 나타내는 토큰이 아니라 `for` 문의 문법 요소이다.
+
+#### 주의: 빈 구문
+
+[빈 구문](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/Empty)을 의도했더라도, 그곳에는 세미콜론을 삽입하지 않는다.
+
+아래는 중괄호 블록<small>(`{ }`)</small>으로 감싸지 않은, 분기문·반복문의 statement 부분에 빈 구문 배치를 의도했더라도 세미콜론이 삽입되지 않는 예시이다.
+
+```javascript
+function sum(low, high) {
+  let i = low // (1-1)
+  let sum = 0 // (1-1)
+
+  while (i <= high)
+
+  // 빈 구문을 의도했더라도 이 자리에는 세미콜론이 삽입되지 않는다.
+  // 아래 첫 구문이 (들여쓰기는 엉망이지만) while 문의 본문이다.
+
+  sum += i++ // (1-1)
+
+  return sum // (1-2)
+}
+```
+
+### 2. 코드의 끝
+
+<mark>마지막 토큰</mark>에 도달했는데 파서가 입력 토큰 스트림을 파싱할 수 없다면, 세미콜론을 그 끝에 삽입한다. 이 규칙은 1번 케이스의 보충이다. 구문이 끝나지 않았는데 입력이 끝나 버려서 더 이상 제공되는 토큰이 없는 상황에 대응한다.
+
+```javascript
+// 2. 구문이 (세미콜론으로) 끝나지 않았는데 입력의 끝을 만났다.
+
+function main() {
+  // 초기화...
+}
+
+main() // (2)
+```
+
+### 3. 허용되지 않는 줄 바꿈
+
+<mark>문법상 줄 바꿈이 허용되지 않는 자리</mark>에 줄 바꿈이 있다면, 그 자리에 세미콜론을 삽입한다. 아래의 `[HERE]` 자리에 줄 바꿈이 들어갔다면, 그 자리에 세미콜론을 삽입한다.
+
+```plaintext
+// 증감
+<좌변표현식> [HERE] ++
+<좌변표현식> [HERE] --
+
+// 제어
+continue [HERE] <레이블> ;
+break [HERE] <레이블> ;
+return [HERE] <표현식> ;
+throw [HERE] <표현식> ;
+yield [HERE] <표현식>
+yield [HERE] * <표현식>
+
+// 함수
+<화살표함수-매개변수> [HERE] => <화살표함수-본문>
+async [HERE] <화살표함수-매개변수> [HERE] => <화살표함수-본문>
+async [HERE] function <식별자> ( <매개변수> ) { <함수-본문> }
+async [HERE] function * <식별자> ( <매개변수> ) { <함수-본문> }
+
+// 클래스 메서드
+async [HERE] <식별자> ( <매개변수> ) { <함수-본문> }
+async [HERE] * <식별자> ( <매개변수> ) { <함수-본문> }
+```
+
+아래는 증감 연산자 앞 줄 바꿈 자리에 세미콜론이 삽입되는 예시다.
+
+```javascript
+// 3. 줄 바꿈이 허용되지 않는 자리에서 줄 바꿈을 만났다.
+
+a = b // (3)
+++c;
+
+/* 실제 동작:
+ *   a = b;
+ *   ++c;
+ * 오해 1:
+ *   a = b + (+c);
+ * 오해 2:
+ *   a = b++;
+ *   c;
+ */
+```
+
+---
+
+## 관련 문제 사례
+
+### 세미콜론이 추가되어서 문제가 되는 사례
+
+#### 함수에서 객체 대신 undefined 반환
+
+아래 예제에서는 허용되지 않는 줄 바꿈으로 인해 `return`과 객체 사이에 세미콜론이 삽입되어 `undefined`를 반환한다.
+
+```javascript
+return
+{
+  firstName: 'John',
+  lastName: 'Doe'
+}
+
+return; // undefined가 반환된다. 아래는 도달할 수 없으므로 무시된다.
+{
+  firstName: 'John',
+  lastName: 'Doe'
+};
+```
+
+ESLint의 `no-unreachable` 규칙을 적용하여 이런 실수를 막을 수 있다.[^eslint-no-unreachable] 단, 이 규칙은 도달할 수 없는 코드가 있을 때만 알려주므로, `yield` 표현식에는 이 실수를 해도 알려주지 않는다.
+
+### 세미콜론이 안 추가되어서 문제가 되는 사례
+
+위 3가지 기본 규칙에 해당하지 않으면 ASI가 적용되지 않는다. 그러니까 <mark>(2) 코드의 끝도 아니고,</mark> <mark>(3) 줄 바꿈이 허용되는 곳에서,</mark> <mark>(1) 문법상 유효한 토큰을 만나면</mark> ASI가 적용되지 않는다.
+
+`(`, `[`, <code>\`</code>, `/`, `+`, `-`로 시작하는 구문을 의도했더라도, 직전 구문을 세미콜론으로 마치지 않았다면 의도와 다르게 앞 구문에 붙을 수 있다. 각 문자로 시작하는 구문이 앞 줄에 붙으면 아래와 같이 실행된다.
+
+| 시작 문자 | 의도 | 앞 줄에 붙으면 |
+| --- | --- | --- |
+| ( | 표현식 감싸기<br />(객체 구조분해 할당, 연산자 우선순위 조정, 리터럴, 즉시 실행 함수 패턴 등) | 함수 호출 |
+| \[ | 배열 리터럴, 배열 구조분해 할당 | 객체 프로퍼티 조회 |
+| \` | 템플릿 리터럴 | 태그 함수 호출 |
+| / | 정규 표현식 리터럴 | 나눗셈 |
+| +, - | 단항 부호 연산자 | 덧셈·연결, 뺄셈 |
+
+클래스 내에서 ‘대괄호 표기법으로 정의한 속성’이나 제너레이터 메서드가 앞 줄에 붙으면 아래와 같이 실행된다.
+
+| 시작 문자 | 의도 | 앞 줄에 붙으면 |
+| --- | --- | --- |
+| \[  | 대괄호 표기법으로 정의한 속성 | 대괄호 표기법으로 객체 속성 조회 |
+| * | 제너레이터 메서드 | 곱하기 |
+
+#### 예제
+
+배열 구조분해 할당 구문은 여는 대괄호로 시작한다. 앞 세미콜론이 빠지면, 직전 표현식 결과의 프로퍼티를 조회하는 구문으로 해석된다.
+
+```javascript
+// 의도: 대괄호로 시작하는 구문(배열 구조 분해 할당)
+let a = 1
+let b = 2
+[a, b] = [b, a]
+
+// 실제 동작: 객체 프로퍼티 조회 (배열 요소 조회)
+let a = 1;
+let b = 2[a, b] = [b, a];
+// ReferenceError: b is not defined
+```
+
+즉시 실행 함수나 객체 구조 분해 할당 등, 다양한 구문이 여는 소괄호로 시작한다. 이런 구문 앞에 세미콜론이 없다면, 직전 표현식 결과를 함수로서 호출하는 구문으로 해석된다.
+
+```javascript
+// 의도: 소괄호로 시작하는 구문(즉시 실행 함수 감싸기)
+const a = 1
+((value) => console.log(value))(a)
+(2).toString()
+
+// 실제 동작: 즉시 실행 함수를 인수로 넣어서 함수 호출
+const a = 1((value) => console.log(value))(a)(2).toString();
+// TypeError: 1 is not a function
+
+// 실제 동작을 읽기 쉽게 풀어 보기
+const fn = (value) => console.log(value);
+const a = 1(fn)(a)(2).toString();
+```
+
+#### 문제 해결 방법
+
+당연하게도 세미콜론을 올바른 곳에 잘 붙이면, 코드의 일부가 ASI 대상이 아니어서 발생하는 문제를 안 겪는다.
+
+구문을 마치는 세미콜론을 생략하고 싶다면, [Standard](https://standardjs.com/rules) 코딩 스타일 가이드의 [Semicolons 문단](https://standardjs.com/rules#semicolons)을 따른다. `(`, `[`, <code>\`</code>, `/`, `+`, `-`, `*`로 시작하는 구문 앞에 세미콜론을 붙여서 후속 구문<small>(을 의도한 것)</small>이 앞 줄에 붙지 않게 막는다. 또는 그런 구문을 여러 구문·선언으로 나누어서 문제를 회피한다.[^style-standard]
+
+```javascript
+// 앞에 세미콜론 붙이기
+;[1, 2, 3].forEach(fn)
+
+// 여러 구문으로 나누기
+const values = [1, 2, 3]
+values.forEach(fn)
+```
+
+ESLint의 `semi` 규칙은 이런 실수를 알려주지 않는다. `no-unexpected-multiline` 규칙을 켜야 알려준다. ESLint 공식 문서에서는, 실수로 이런 코드를 만들지 않을 자신이 있으면 이 규칙을 꺼도 좋다고 안내한다.[^eslint-no-unexpected-multiline]
+
+---
+
+## 사견
+
+나는 세미콜론을 항상 붙이는 쪽을 선호한다. 이쪽은 줄 바꿈만 조심하면 된다. 세미콜론을 생략하면 코드를 작성할 때 줄 바꿈 외에 추가로 신경 써야 하는 요소가 생긴다. 매 구문이 의도하지 않게 앞 구문에 붙을지를 판별해서, 그런 구문을 의도적으로 변형하거나 그 앞에 세미콜론을 붙여야 한다. 세미콜론을 생략하면 안 생각해도 되는 한 단계를 더 고려해야 한다.
+
+하지만 Lint를 함께 쓴다면 충분히 타협 가능하다.
+
+[^tc39-asi]: “ECMAScript® 2024 Language Specification”, *Ecma International*. https://tc39.es/ecma262/2024/#sec-automatic-semicolon-insertion (2024년 6월 6일에 확인). (크기가 작은 [멀티 페이지 문서](https://tc39.es/ecma262/2024/multipage/ecmascript-language-lexical-grammar.html#sec-automatic-semicolon-insertion) 열람 가능)
+[^mdn-asi]: “Lexical grammar”, *MDN*. https://developer.mozilla.org/en-US/docs/Web/javascript/Reference/Lexical_grammar#automatic_semicolon_insertion (2024년 6월 6일에 확인).
+[^wikipedia-en-token]: “Lexical analysis”, *Wikipedia*. https://en.wikipedia.org/wiki/Lexical_analysis#Lexical_token_and_lexical_tokenization (2024년 6월 7일에 확인).
+[^eslint-no-unreachable]: no-unreachable, *ESLint*. https://eslint.org/docs/latest/rules/no-unreachable (2024년 6월 7일에 확인).
+[^style-standard]: “JavaScript Standard Style”, *JavaScript Standard Style*. https://standardjs.com/rules#semicolons (2024년 6월 7일에 확인).
+[^eslint-no-unexpected-multiline]: no-unexpected-multiline, *ESLint*. https://eslint.org/docs/latest/rules/no-unexpected-multiline (2024년 6월 7일에 확인).
