@@ -18,6 +18,7 @@ defaults:
 jobs:
   notify:
     runs-on: ubuntu-latest
+    timeout-minutes: 3
 
     steps:
       - name: 블로그 코어의 배포 워크플로 실행
