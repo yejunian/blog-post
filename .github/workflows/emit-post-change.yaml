@@ -6,14 +6,10 @@ name: 블로그 코어에 변화 통지
 
 on:
   push:
-    branches: [$default-branch]
+    branches: [main]
 
   # Actions 탭에서 수동으로 워크플로 실행 허용
   workflow_dispatch:
-
-permissions:
-  actions: write
-  contents: write
 
 defaults:
   run:
